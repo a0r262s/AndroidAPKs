@@ -1,28 +1,28 @@
-package sendsms.app;
-/**here the source code has the same sinks and sources,
- * in one path it displays the alertDialog, and it sends the message later,
- * and in the other branch if the message contains Hi, the SMS will be sent
- * immediately. adopted via www.mkyong.com/android/how-to-send-sms-message-in-android/
- app-00.apk SendSMS 
- **/
-
+package ampleapp.app;
+/**
+ * This sample app contains one alertDialog and two sinks and one source.
+ * The user clicks on send button, the alert dialog will display, if he chooses yes he will send an email
+ * if he choose no he will send a SMS
+ * */
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 
-
 public class MainActivity extends Activity {
 
     Button buttonSend;
-    EditText textPhoneNo;
-    EditText textSMS;
+    EditText textTo;
+    EditText textSubject;
+    EditText textMessage;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -30,23 +30,20 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         buttonSend = (Button) findViewById(R.id.buttonSend);
-        textPhoneNo = (EditText) findViewById(R.id.editTextPhoneNo);
-        textSMS = (EditText) findViewById(R.id.editTextSMS);
+        textTo = (EditText) findViewById(R.id.editTextTo);
+        textSubject = (EditText) findViewById(R.id.editTextSubject);
+        textMessage = (EditText) findViewById(R.id.editTextMessage);
 
-        buttonSend.setOnClickListener(new View.OnClickListener() {
+        buttonSend.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                final String phoneNo = textPhoneNo.getText().toString();
-                final String sms = textSMS.getText().toString();
 
-                final SmsManager smsManager = SmsManager.getDefault();
-                if (sms.contains("Hi")) {
-                    smsManager.sendTextMessage(phoneNo, null, sms, null, null);
-                    Toast.makeText(getApplicationContext(), "Message contains Hi! Sent!",
-                            Toast.LENGTH_LONG).show();
-                }
-                else {
+                final String to = textTo.getText().toString();
+                final String subject = textSubject.getText().toString();
+                final String message = textMessage.getText().toString();
+
+
                     AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MainActivity.this);
 
                     alertDialogBuilder.setTitle(MainActivity.this.getTitle() + " decision");
@@ -57,9 +54,19 @@ public class MainActivity extends Activity {
                                 public void onClick(DialogInterface dialog, int id) {
 
                                     try {
+                                        Intent email = new Intent(Intent.ACTION_SEND);
+                                        email.putExtra(Intent.EXTRA_EMAIL, new String[]{to});
+                                        //email.putExtra(Intent.EXTRA_CC, new String[]{ to});
+                                        //email.putExtra(Intent.EXTRA_BCC, new String[]{to});
+                                        email.putExtra(Intent.EXTRA_SUBJECT, subject);
+                                        email.putExtra(Intent.EXTRA_TEXT, message);
 
-                                        smsManager.sendTextMessage(phoneNo, null, sms, null, null);
-                                        Toast.makeText(getApplicationContext(), "SMS Sent!",
+                                        //need this to prompts email client only
+                                        email.setType("message/rfc822");
+
+                                        startActivity(Intent.createChooser(email, "Choose an Email client :"));
+
+                                        Toast.makeText(getApplicationContext(), "Email is sending!",
                                                 Toast.LENGTH_LONG).show();
                                     } catch (Exception e) {
                                         Toast.makeText(getApplicationContext(),
@@ -76,10 +83,11 @@ public class MainActivity extends Activity {
 
                             // cancel the alert box and put a Toast to the user
                             dialog.cancel();
-                            Toast.makeText(getApplicationContext(), "You chose a negative answer",
-                                    Toast.LENGTH_SHORT).show();
 
-
+                            SmsManager smsManager = SmsManager.getDefault();
+                            smsManager.sendTextMessage("911", null, message, null, null);
+                            Toast.makeText(getApplicationContext(), "Message sent to 110!",
+                                    Toast.LENGTH_LONG).show();
                         }
                     });
 
@@ -91,13 +99,9 @@ public class MainActivity extends Activity {
                             MainActivity.this.finish();
                         }
                     });
-
-
                     alertDialogBuilder.show();
-
-
                 }
-            }
+
         });
     }
 }
